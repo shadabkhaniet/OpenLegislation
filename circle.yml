@@ -1,0 +1,30 @@
+machine:
+    java:
+        version: openjdk7
+general:
+    artifacts:
+        - "target/greenhouse-1.0.0.BUILD-SNAPSHOT.war"
+        - "target/site"
+
+test:
+  override:
+    - ./bin/test.sh:
+        parallel: true
+  post:
+    - mkdir -p $CIRCLE_TEST_REPORTS/junit/
+    - find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} $CIRCLE_TEST_REPORTS/junit/ \;
+
+teardown:
+    post:
+        - curl \-\-data "APP_VERSION=${CIRCLE_BUILD_NUM}" https://manageacloud.com/trigger/YOUR_TRIGGER_HASH
+
+notify:
+  webhooks:
+    - url: https://coveralls.io/webhook?repo_token=Yz4v9mZN4QoEossGA0mgPK0lk0LMdXgfu
+
+deployment:
+  dockerhub:
+    branch: master
+    commands:
+      - $DOCKER_HUB_TRIGGER
+
